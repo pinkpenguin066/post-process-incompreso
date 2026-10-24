@@ -111,7 +111,7 @@ class Post:
             )
 
         flu.vorticity(
-            self.get_snapshot(),
+            self. get_fluid_snapshot(),
             config_path=os.path.join(config_location, config_name),
             output_dir=output_dir or self.vorticity_location,
             dataset_name=self.data_name,
@@ -151,7 +151,7 @@ class Post:
         print(f"Success! Movie saved to {output_file}")
 
     def max_velocity_calculation(self):
-        u, v = flu.max_velocity_magnitude(self.get_snapshot())
+        u, v = flu.max_velocity_magnitude(self. get_fluid_snapshot())
         print(f"Max velocity magnitude: u={u:.6e}, v={v:.6e}")
         return u, v
 
