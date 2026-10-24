@@ -19,6 +19,8 @@ class Post:
         config_location=None,
         config_name=None,
         params_location=None,
+        upper_limit=None,
+        lower_limit=None,
     ):
         self.data_location = os.fspath(data_location)
         self.data_name = os.path.basename(os.path.normpath(self.data_location))
@@ -32,8 +34,13 @@ class Post:
         self.config_location = config_location
         self.config_name = config_name
         self.params_location = params_location
+        self.upper_limit = upper_limit
+        self.lower_limit = lower_limit
 
-    def get_snapshot(self):
+    def __repr__(self) -> str:
+        return f"Post(data_dir='{self.data_dir}')"
+        
+    def get_fluid_snapshot(self):
         snapshots = glob.glob(
             os.path.join(self.data_location, "snapshot_*.npz")
         )
@@ -48,6 +55,7 @@ class Post:
             )
         )
         print("Files selected:", len(snapshots))
+        snapshots = self.snapshot_limit(snapshots)
         return snapshots
 
     def get_body_snapshot(self):
@@ -65,8 +73,32 @@ class Post:
             )
         )
         print("Body files selected:", len(snapshots))
+        snapshots = self.snapshot_limit(snapshots)
         return snapshots
 
+    def snapshot_limit(self, snapshots):
+        snapshots = [
+            path
+            for path in snapshots
+            if (
+                self.lower_limit is None
+                or self.lower_limit
+                <= int(re.search(r"snapshot_(\d+)_body\.vtp$", path).group(1))
+            )
+            and (
+                self.upper_limit is None
+                or int(re.search(r"snapshot_(\d+)_body\.vtp$", path).group(1))
+                <= self.upper_limit
+            )
+        ]
+        if not snapshots:
+            raise ValueError(
+                f"No body snapshots found in {self.data_location} "
+                "within the selected limits"
+            )
+        
+        return snapshots
+    
     def vorticity_calculation(
         self, config_location=None, config_name=None, output_dir=None
     ):
