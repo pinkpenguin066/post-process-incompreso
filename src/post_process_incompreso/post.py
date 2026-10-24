@@ -284,6 +284,9 @@ class Post:
         plt.title(f'Voltage vs Time ({self.data_name})')
         plt.grid(True, linestyle='--', alpha=0.6)
         plt.tight_layout()
-        plt.savefig(self.output_location, dpi=300)
+        plot_path = os.path.join(
+            self.output_location, f"voltage_{self.data_name}.png"
+        )
+        plt.savefig(plot_path, dpi=300)
         plt.close()
         return voltage_rms_after_t
