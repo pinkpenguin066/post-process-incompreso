@@ -257,33 +257,33 @@ class Post:
         print(f"Parameter file saved to {param_file_path}")
         return parameters
 
-        def voltage(self, post_transit = 0):
-            t, y , v = self. body_position_velocity()
-            y_dim = y * 0.0192
-            chi = 0.00023
-            C_p = 4.3e-8
-            tau = 1.1135
-            voltage = chi / C_p / tau * y_dim
-            after_t = t > post_transit
-            if not np.any(after_t):
-                raise ValueError(f'No voltage samples found after T = {post_transit}')
-            voltage_rms_after_t = np.sqrt(np.mean(voltage[after_t] ** 2))
+    def voltage(self, post_transit = 0):
+        t, y , v = self. body_position_velocity()
+        y_dim = y * 0.0192
+        chi = 0.00023
+        C_p = 4.3e-8
+        tau = 1.1135
+        voltage = chi / C_p / tau * y_dim
+        after_t = t > post_transit
+        if not np.any(after_t):
+            raise ValueError(f'No voltage samples found after T = {post_transit}')
+        voltage_rms_after_t = np.sqrt(np.mean(voltage[after_t] ** 2))
 
-            os.makedirs(self.output_location, exist_ok=True)
-            voltage_file_path = os.path.join(
-                self.output_location, f"rms_voltage_{self.data_name}.txt"
-            )
-            with open(voltage_file_path, "w") as output_file:
-                output_file.write(f"rms voltage after t = {post_transit}: {voltage_rms_after_t}\n")
-            print(f"voltage file saved to {voltage_file_path}")
+        os.makedirs(self.output_location, exist_ok=True)
+        voltage_file_path = os.path.join(
+            self.output_location, f"rms_voltage_{self.data_name}.txt"
+        )
+        with open(voltage_file_path, "w") as output_file:
+            output_file.write(f"rms voltage after t = {post_transit}: {voltage_rms_after_t}\n")
+        print(f"voltage file saved to {voltage_file_path}")
 
-            plt.figure(figsize=(10, 4))
-            plt.plot(t, voltage, '-', color='tab:green', linewidth=1.2)
-            plt.xlabel('Time unit')
-            plt.ylabel('Voltage [V]')
-            plt.title(f'Voltage vs Time ({self.data_name})')
-            plt.grid(True, linestyle='--', alpha=0.6)
-            plt.tight_layout()
-            plt.savefig(self.output_location, dpi=300)
-            plt.close()
-            return voltage_rms_after_t
+        plt.figure(figsize=(10, 4))
+        plt.plot(t, voltage, '-', color='tab:green', linewidth=1.2)
+        plt.xlabel('Time unit')
+        plt.ylabel('Voltage [V]')
+        plt.title(f'Voltage vs Time ({self.data_name})')
+        plt.grid(True, linestyle='--', alpha=0.6)
+        plt.tight_layout()
+        plt.savefig(self.output_location, dpi=300)
+        plt.close()
+        return voltage_rms_after_t
