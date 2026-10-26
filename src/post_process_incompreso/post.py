@@ -290,3 +290,80 @@ class Post:
         plt.savefig(plot_path, dpi=300)
         plt.close()
         return voltage_rms_after_t
+    
+    def mesh_extract(self, config_location=None, config_name=None):
+        import yaml
+        from matplotlib.collections import LineCollection
+        from incompreso import Mesh
+        from incompreso.backend import to_numpy
+
+        config_location = config_location or self.config_location
+        config_name = config_name or self.config_name
+        if config_location is None or config_name is None:
+            raise ValueError(
+                "Set config_location and config_name when creating Post "
+                "or calling mesh_extract."
+            )
+
+        config_path = Path(config_location) / config_name
+        with config_path.open() as config_file:
+            config = yaml.safe_load(config_file)
+
+        mesh_cfg = config["mesh"]
+        x_cfg = mesh_cfg["x"]
+        y_cfg = mesh_cfg["y"]
+        z_cfg = mesh_cfg.get("z")
+
+        mesh = Mesh(
+            x_cfg["breakpoints"],
+            x_cfg["spacings"],
+            y_cfg["breakpoints"],
+            y_cfg["spacings"],
+            zvec=z_cfg["breakpoints"] if z_cfg else None,
+            dzvec=z_cfg["spacings"] if z_cfg else None,
+            mirror_x=x_cfg.get("mirror", False),
+            mirror_y=y_cfg.get("mirror", False),
+            mirror_z=z_cfg.get("mirror", False) if z_cfg else False,
+        )
+
+        x = to_numpy(mesh.x)
+        y = to_numpy(mesh.y)
+        lines = (
+            [[(x_coord, y[0]), (x_coord, y[-1])] for x_coord in x]
+            + [[(x[0], y_coord), (x[-1], y_coord)] for y_coord in y]
+        )
+
+        os.makedirs(self.output_location, exist_ok=True)
+        fig, ax = plt.subplots(figsize=(8, 8))
+        ax.add_collection(LineCollection(lines, colors="black", linewidths=0.4))
+        ax.set_xlim(x[0], x[-1])
+        ax.set_ylim(y[0], y[-1])
+        ax.set_aspect("equal")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_title(f"Mesh - {self.data_name}")
+        fig.tight_layout()
+
+        plot_path = os.path.join(
+            self.output_location, f"mesh_{self.data_name}.png"
+        )
+        fig.savefig(plot_path, dpi=300)
+        plt.close(fig)
+        print(f"Mesh plot saved to {plot_path}")
+
+        mesh_file_path = os.path.join(
+            self.output_location, f"mesh_{self.data_name}.txt"
+        )
+
+        with open(mesh_file_path, "w") as output_file:
+            output_file.write("Mesh settings from config.yaml:\n")
+            yaml.safe_dump({"mesh": mesh_cfg}, output_file, sort_keys=False)
+
+            output_file.write("\nGenerated x grid-line coordinates:\n")
+            np.savetxt(output_file, x, fmt="%.8g")
+
+            output_file.write("\nGenerated y grid-line coordinates:\n")
+            np.savetxt(output_file, y, fmt="%.8g")
+
+        print(f"Mesh settings and coordinates saved to {mesh_file_path}")
+        return plot_path
