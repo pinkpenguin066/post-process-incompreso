@@ -297,6 +297,8 @@ class Post:
         from incompreso import Mesh
         from incompreso.backend import to_numpy
 
+        print('i made it')
+
         config_location = config_location or self.config_location
         config_name = config_name or self.config_name
         if config_location is None or config_name is None:
@@ -343,6 +345,28 @@ class Post:
         ax.set_ylabel("y")
         ax.set_title(f"Mesh - {self.data_name}")
         fig.tight_layout()
+
+
+        zoom_fig, zoom_ax = plt.subplots(figsize=(8, 8))
+        zoom_ax.add_collection(
+            LineCollection(lines, colors="black", linewidths=0.4)
+        )
+        zoom_ax.set_xlim(-2, 2)
+        zoom_ax.set_ylim(-2, 2)
+        zoom_ax.set_aspect("equal")
+        zoom_ax.set_xlabel("x")
+        zoom_ax.set_ylabel("y")
+        zoom_ax.set_title(f"Mesh (zoomed) - {self.data_name}")
+        zoom_fig.tight_layout()
+
+        zoom_plot_path = os.path.join(
+            self.output_location, f"mesh_zoom_{self.data_name}.png"
+        )
+        zoom_fig.savefig(zoom_plot_path, dpi=300)
+        plt.close(zoom_fig)
+        print(f"Zoomed mesh plot saved to {zoom_plot_path}")
+
+
 
         plot_path = os.path.join(
             self.output_location, f"mesh_{self.data_name}.png"
